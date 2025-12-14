@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     
 <style>
-    /* CSS Variables for Modern Theming */
+    /* CSS Variables for Modern Theming (KEEP THIS SECTION FOR THE NEW LOOK) */
     :root {
         /* Light Theme Defaults */
         --color-bg: #f0f2f5; /* Soft light background */
@@ -82,7 +82,7 @@
         font-size: 1.4em;
         transition: transform 0.2s;
         margin-right: 5px;
-        user-select: none; /* Prevents selection when clicking the icon */
+        user-select: none;
     }
     .theme-toggle:hover {
         transform: scale(1.1);
@@ -185,57 +185,20 @@
     .msg-content p { margin-top: 0; margin-bottom: 1em; }
     .msg-content p:last-child { margin-bottom: 0; }
 
-    /* CODE BLOCK STYLING */
-    /* Wrapper for the code block and copy button */
-    .code-container {
-        position: relative;
-        /* Use padding on the .msg-content for the code block container */
-        margin: 10px -20px 0 -20px; 
-        padding: 0;
-        border-radius: 8px; 
-        overflow: hidden;
-        border: 1px solid var(--color-code-border);
-    }
-
+    /* Code block styling simplified for stability */
     .msg-content pre {
         background-color: var(--color-code-bg);
         color: var(--color-code-text);
         padding: 15px 20px;
         font-family: 'Consolas', 'Courier New', monospace;
         font-size: 0.9em;
-        margin: 0; 
+        margin: 10px 0; /* Add margin around code block */
         white-space: pre-wrap; 
         word-break: break-all;
         overflow-x: auto;
-        padding-top: 45px; /* Make space for the copy button */
         line-height: 1.4;
-    }
-    
-    .copy-button {
-        position: absolute;
-        top: 0; /* Align to the top border */
-        right: 0;
-        background-color: var(--color-code-bg);
-        color: var(--color-copy-btn);
-        border: none; 
-        border-bottom: 1px solid var(--color-code-border);
-        border-left: 1px solid var(--color-code-border);
-        border-radius: 0 8px 0 4px; /* Rounded top-right corner */
-        padding: 8px 15px;
-        cursor: pointer;
-        font-size: 0.85em;
-        z-index: 10;
-        transition: color 0.2s, background-color 0.2s;
-        user-select: none;
-    }
-    .copy-button:hover {
-        color: var(--color-copy-btn-hover);
-        background-color: var(--color-code-border);
-    }
-    .copy-button.copied {
-        background-color: #4CAF50; 
-        color: white;
-        border-color: #4CAF50;
+        border-radius: 6px;
+        border: 1px solid var(--color-code-border);
     }
     
     /* TYPING INDICATOR STYLING */
@@ -283,7 +246,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/14.1.0/markdown-it.min.js" integrity="sha512-42fG/wE9c72sQ/X4zN8uP+yQv9j/s2R1G2zT0d9n/7z+s7V5rM1+p3K5lFv3t8Kx8WJ/v8v1t8qXw/v8Q/v8v1t8qXw/v8Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/14.1.0/markdown-it.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         // DOM Elements
         const chatWindow = document.getElementById('chat-window');
@@ -292,11 +255,9 @@
         const themeToggle = document.getElementById('theme-toggle');
 
         // State Variables
-        const md = new markdownit();
+        const md = new markdownit(); // Markdown parser
         let isWaitingForResponse = false;
-
-        // Conversation History (stores raw text for context)
-        let conversationHistory = [];
+        let conversationHistory = []; // Stores raw text for context
 
         // --- Core Functions ---
 
@@ -314,7 +275,6 @@
                 <div class="msg-content">${content}</div>
             `;
             chatWindow.appendChild(row);
-            // Scroll to bottom
             chatWindow.scrollTop = chatWindow.scrollHeight;
             return row;
         }
@@ -332,7 +292,8 @@
             sendButton.textContent = 'Wait...';
 
             // 2. Add User Message and Context
-            const userHtmlContent = `<p>${message}</p>`;
+            // Render user input as simple HTML
+            const userHtmlContent = `<p>${message}</p>`; 
             addMessage('user', userHtmlContent);
             
             // Add user message to history
@@ -362,13 +323,10 @@
                 loadingRow.remove();
 
                 if (response.ok) {
-                    // Render Markdown content to HTML
-                    const renderedContent = renderMarkdown(botResponse);
-                    const botRow = addMessage('bot', renderedContent);
+                    // Render Markdown content to HTML (stable, simple markdown parsing)
+                    const renderedContent = md.render(botResponse); 
+                    addMessage('bot', renderedContent);
                     
-                    // Add functionality to copy buttons in the new message
-                    attachCopyListeners(botRow);
-
                     // Add the bot response to history (for next context)
                     conversationHistory.push(botResponse);
 
@@ -391,75 +349,6 @@
             }
         }
 
-        // --- UI Enhancements and Helpers ---
-
-        /**
-         * Renders Markdown content and wraps code blocks for copying.
-         */
-        function renderMarkdown(markdownText) {
-            // 1. Render Markdown to HTML
-            let htmlContent = md.render(markdownText);
-            
-            // 2. Wrap all <pre> tags (code blocks) with a container and copy button
-            // This is necessary because markdown-it renders code blocks as: <pre><code>...</code></pre>
-            
-            // Use a regex to find all code blocks and wrap them
-            htmlContent = htmlContent.replace(
-                /<pre><code([^>]*)>([\s\S]*?)<\/code><\/pre>/gi,
-                (match, langAttr, codeContent) => {
-                    // Extract language if present (e.g., class="language-python")
-                    const langMatch = langAttr.match(/class="language-(\w+)"/);
-                    const language = langMatch ? langMatch[1].toUpperCase() : 'Code';
-                    
-                    // Re-escape HTML entities for display in the pre tag
-                    const escapedCodeContent = codeContent
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&quot;/g, '"');
-
-                    return `
-                        <div class="code-container">
-                            <button class="copy-button" data-code="${escapedCodeContent}">${language} &nbsp; Copy</button>
-                            <pre><code${langAttr}>${codeContent}</code></pre>
-                        </div>
-                    `;
-                }
-            );
-
-            return htmlContent;
-        }
-
-        /**
-         * Attaches click listeners to all 'Copy' buttons within a message row.
-         */
-        function attachCopyListeners(element) {
-            const copyButtons = element.querySelectorAll('.copy-button');
-            copyButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
-                    // The raw code is stored in a data attribute
-                    const codeToCopy = e.target.getAttribute('data-code');
-                    
-                    navigator.clipboard.writeText(codeToCopy)
-                        .then(() => {
-                            // Temporary feedback
-                            e.target.textContent = 'Copied!';
-                            e.target.classList.add('copied');
-                            setTimeout(() => {
-                                // Restore original button text
-                                const language = e.target.textContent.split(' ')[0];
-                                e.target.textContent = `${language}   Copy`;
-                                e.target.classList.remove('copied');
-                            }, 1500);
-                        })
-                        .catch(err => {
-                            console.error('Could not copy text: ', err);
-                            e.target.textContent = 'Error!';
-                        });
-                });
-            });
-        }
-        
         // --- Event Listeners ---
 
         // Send message on button click
@@ -489,13 +378,6 @@
                 themeToggle.textContent = 'light_mode';
             }
         })();
-
-        // Initial check for all existing code blocks (just in case)
-        // This is mainly for debugging/initial message if it had code blocks.
-        window.addEventListener('load', () => {
-             attachCopyListeners(chatWindow);
-        });
-
     </script>
 </body>
 </html>
