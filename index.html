@@ -1,395 +1,501 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Custom Gemini Assistant</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* CSS Variables for Gemini-like Theming */
-        :root {
-            /* Light Theme Defaults (Primary Google/Gemini Colors) */
-            --color-bg: #f9f9f9; /* Near-white background */
-            --color-container-bg: #ffffff;
-            --color-header-bg: #1a73e8; /* Blue */
-            --color-text: #1f1f1f;
-            --color-user-msg: #dcf8c6; /* Light user bubble */
-            --color-bot-msg: #f0f0f0; /* Light bot bubble */
-            --color-input-border: #dadce0;
-            --color-code-bg: #f5f5f5; /* Code block background */
-            --color-code-text: #333333;
-            --color-code-border: #ddd;
-            --color-copy-btn: #aaaaaa;
-            --color-copy-btn-hover: #1f1f1f;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Chatbot | Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+<style>
+    /* CSS Variables for Modern Theming */
+    :root {
+        /* Light Theme Defaults */
+        --color-bg: #f0f2f5; /* Soft light background */
+        --color-container-bg: #ffffff;
+        --color-header-bg: #4a90e2; /* A modern blue */
+        --color-text: #2c3e50; /* Dark navy text */
+        --color-user-msg: #d9f7be; /* Soft user bubble */
+        --color-bot-msg: #e9ecef; /* Neutral light gray bot bubble */
+        --color-input-border: #cccccc;
+        --color-code-bg: #f8f9fa; /* Very light code block */
+        --color-code-text: #333333;
+        --color-code-border: #e0e0e0;
+        --color-copy-btn: #888888;
+        --color-copy-btn-hover: #4a90e2;
+        --color-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
 
-        /* Dark Theme Overrides */
-        .dark-mode {
-            --color-bg: #0f0f0f; /* Deep black background */
-            --color-container-bg: #1e1e1e; /* Dark container */
-            --color-header-bg: #0c4aae; /* Darker blue */
-            --color-text: #e0e0e0;
-            --color-user-msg: #303d30; /* Darker green */
-            --color-bot-msg: #333333; /* Dark bot bubble */
-            --color-input-border: #444;
-            --color-code-bg: #282c34; /* VS Code dark code block */
-            --color-code-text: #e0e0e0;
-            --color-code-border: #444;
-            --color-copy-btn: #cccccc;
-            --color-copy-btn-hover: #e0e0e0;
-        }
+    /* Dark Theme Overrides */
+    .dark-mode {
+        --color-bg: #121212; /* Deep dark background */
+        --color-container-bg: #1e1e1e; /* Dark container */
+        --color-header-bg: #1f3a5f; /* Darker blue */
+        --color-text: #e0e0e0;
+        --color-user-msg: #2d452d; /* Dark moss green user bubble */
+        --color-bot-msg: #282828; /* Dark neutral bot bubble */
+        --color-input-border: #444444;
+        --color-code-bg: #1d1f21; /* Atom Dark theme code block */
+        --color-code-text: #c5c8c6;
+        --color-code-border: #444444;
+        --color-copy-btn: #aaaaaa;
+        --color-copy-btn-hover: #80bfff;
+        --color-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
 
-        /* BASE STYLING */
-        body { 
-            font-family: 'Roboto', sans-serif;
-            margin: 0; 
-            padding: 30px; 
-            background-color: var(--color-bg);
-            display: flex;
-            justify-content: center;
-            transition: background-color 0.3s, color 0.3s;
-            color: var(--color-text);
-        }
-        #main-container {
-            width: 100%;
-            max-width: 800px;
-            background-color: var(--color-container-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            height: 85vh;
-            display: flex;
-            flex-direction: column;
-        }
-        #chat-header {
-            background-color: var(--color-header-bg);
-            color: white;
-            padding: 18px;
-            font-size: 1.4em;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-left: 20px;
-        }
-        .theme-toggle {
-            cursor: pointer;
-            font-size: 1.2em;
-            padding: 5px;
-            border-radius: 5px;
-        }
-        #chat-window { 
-            flex-grow: 1;
-            padding: 20px; 
-            overflow-y: auto; 
-            scroll-behavior: smooth;
-        }
-        #chat-input-area { 
-            display: flex; 
-            padding: 15px; 
-            border-top: 1px solid var(--color-input-border);
-        }
-        #user-input { 
-            flex-grow: 1; 
-            padding: 12px 18px; 
-            border: 1px solid var(--color-input-border); 
-            border-radius: 20px; 
-            margin-right: 10px;
-            font-size: 1em;
-            background-color: var(--color-container-bg);
-            color: var(--color-text);
-        }
-        #send-button { 
-            padding: 10px 20px; 
-            background-color: var(--color-header-bg); 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            border-radius: 20px; 
-            font-size: 1em;
-            transition: background-color 0.2s;
-        }
-        #send-button:disabled {
-            background-color: #b0c4de;
-            cursor: not-allowed;
-        }
+    /* BASE STYLING */
+    body { 
+        font-family: 'Roboto', sans-serif;
+        margin: 0; 
+        padding: 20px; 
+        background-color: var(--color-bg);
+        display: flex;
+        justify-content: center;
+        transition: background-color 0.4s, color 0.4s;
+        color: var(--color-text);
+        height: 100vh;
+    }
+    #main-container {
+        width: 100%;
+        max-width: 900px; /* Slightly wider chat box */
+        background-color: var(--color-container-bg);
+        border-radius: 16px; /* Softer edges */
+        box-shadow: var(--color-shadow);
+        overflow: hidden;
+        height: 100%; /* Fill the viewport space */
+        display: flex;
+        flex-direction: column;
+    }
+    #chat-header {
+        background-color: var(--color-header-bg);
+        color: white;
+        padding: 16px 25px;
+        font-size: 1.5em;
+        font-weight: 700;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .theme-toggle {
+        cursor: pointer;
+        font-size: 1.4em;
+        transition: transform 0.2s;
+        margin-right: 5px;
+        user-select: none; /* Prevents selection when clicking the icon */
+    }
+    .theme-toggle:hover {
+        transform: scale(1.1);
+    }
+    #chat-window { 
+        flex-grow: 1;
+        padding: 25px; 
+        overflow-y: auto; 
+        scroll-behavior: smooth;
+    }
+    #chat-input-area { 
+        display: flex; 
+        padding: 20px 25px; 
+        border-top: 1px solid var(--color-input-border);
+        background-color: var(--color-container-bg);
+    }
+    #user-input { 
+        flex-grow: 1; 
+        padding: 14px 22px; 
+        border: 2px solid var(--color-input-border); 
+        border-radius: 25px; 
+        margin-right: 12px;
+        font-size: 1.05em;
+        background-color: var(--color-container-bg);
+        color: var(--color-text);
+        transition: border-color 0.3s;
+    }
+    #user-input:focus {
+        outline: none;
+        border-color: var(--color-header-bg); /* Highlight on focus */
+    }
+    #send-button { 
+        padding: 12px 25px; 
+        background-color: var(--color-header-bg); 
+        color: white; 
+        border: none; 
+        cursor: pointer; 
+        border-radius: 25px; 
+        font-size: 1.05em;
+        font-weight: 500;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+    #send-button:hover {
+        background-color: #387ac9; /* Slightly darker blue on hover */
+    }
+    #send-button:active {
+        transform: scale(0.98);
+    }
+    #send-button:disabled {
+        background-color: #b0c4de;
+        cursor: not-allowed;
+    }
 
-        /* MESSAGE BUBBLES */
-        .msg-row {
-            display: flex;
-            margin-bottom: 20px; /* Increased margin for line space */
-            align-items: flex-start;
-        }
-        .avatar {
-            width: 36px; /* Slightly larger avatar */
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: white;
-            font-size: 1em;
-            flex-shrink: 0;
-            margin-top: 5px;
-        }
-        .user-avatar { background-color: #4CAF50; order: 2; margin-left: 10px; }
-        .bot-avatar { background-color: #1a73e8; order: 1; margin-right: 10px; }
+    /* MESSAGE BUBBLES */
+    .msg-row {
+        display: flex;
+        margin-bottom: 25px; 
+        align-items: flex-start;
+    }
+    .avatar {
+        width: 40px; 
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        color: white;
+        font-size: 1.1em;
+        flex-shrink: 0;
+        margin-top: 5px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    .user-avatar { background-color: #4CAF50; order: 2; margin-left: 12px; }
+    .bot-avatar { background-color: var(--color-header-bg); order: 1; margin-right: 12px; }
 
-        .msg-content {
-            padding: 12px 18px;
-            border-radius: 12px;
-            max-width: 85%;
-            line-height: 1.6;
-            word-wrap: break-word;
-            text-align: left;
-        }
-        .user-row { justify-content: flex-end; }
-        .user-row .msg-content { background-color: var(--color-user-msg); order: 1; }
-        .bot-row { justify-content: flex-start; }
-        .bot-row .msg-content { background-color: var(--color-bot-msg); order: 2; }
+    .msg-content {
+        padding: 15px 20px;
+        border-radius: 18px; /* More rounded corners */
+        max-width: 75%; /* Slightly narrower message width */
+        line-height: 1.7;
+        word-wrap: break-word;
+        text-align: left;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow on bubbles */
+    }
+    .user-row { justify-content: flex-end; }
+    .user-row .msg-content { 
+        background-color: var(--color-user-msg); 
+        order: 1; 
+        border-bottom-right-radius: 4px; /* Tail effect on user side */
+    }
+    .bot-row { justify-content: flex-start; }
+    .bot-row .msg-content { 
+        background-color: var(--color-bot-msg); 
+        order: 2; 
+        border-bottom-left-radius: 4px; /* Tail effect on bot side */
+    }
+    
+    /* Ensure content formatting is clean inside messages */
+    .msg-content p { margin-top: 0; margin-bottom: 1em; }
+    .msg-content p:last-child { margin-bottom: 0; }
 
-        /* CODE BLOCK STYLING (The Special Box with Copy Button) */
-        .code-container {
-            position: relative;
-            margin: 10px -18px 0 -18px; /* Negative margin to span full bubble width */
-            padding: 0;
-            border-radius: 6px;
-            overflow: hidden;
-        }
+    /* CODE BLOCK STYLING */
+    /* Wrapper for the code block and copy button */
+    .code-container {
+        position: relative;
+        /* Use padding on the .msg-content for the code block container */
+        margin: 10px -20px 0 -20px; 
+        padding: 0;
+        border-radius: 8px; 
+        overflow: hidden;
+        border: 1px solid var(--color-code-border);
+    }
 
-        .msg-content pre {
-            background-color: var(--color-code-bg);
-            color: var(--color-code-text);
-            padding: 15px 18px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 0.9em;
-            border: 1px solid var(--color-code-border);
-            margin: 0; /* Remove default margin */
-            white-space: pre-wrap; 
-            word-break: break-all;
-            overflow-x: auto;
-            padding-top: 40px; /* Make space for the copy button */
-        }
-        
-        .copy-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: var(--color-code-bg);
-            color: var(--color-copy-btn);
-            border: 1px solid var(--color-code-border);
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 0.8em;
-            z-index: 10;
-            transition: color 0.2s;
-        }
-        .copy-button:hover {
-            color: var(--color-copy-btn-hover);
-        }
-        .copy-button.copied {
-            background-color: #4CAF50; /* Green on success */
-            color: white;
-            border-color: #4CAF50;
-        }
-
-        /* TYPING INDICATOR STYLING */
-        .loading-row .msg-content {
-            background-color: #e6e6fa;
-            color: #555;
-            font-style: italic;
-            animation: pulse 1.5s infinite;
-        }
-        .dark-mode .loading-row .msg-content {
-             background-color: #444;
-             color: #ccc;
-        }
-        @keyframes pulse {
-            0% { opacity: 0.7; }
-            50% { opacity: 1.0; }
-            100% { opacity: 0.7; }
-        }
-    </style>
+    .msg-content pre {
+        background-color: var(--color-code-bg);
+        color: var(--color-code-text);
+        padding: 15px 20px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 0.9em;
+        margin: 0; 
+        white-space: pre-wrap; 
+        word-break: break-all;
+        overflow-x: auto;
+        padding-top: 45px; /* Make space for the copy button */
+        line-height: 1.4;
+    }
+    
+    .copy-button {
+        position: absolute;
+        top: 0; /* Align to the top border */
+        right: 0;
+        background-color: var(--color-code-bg);
+        color: var(--color-copy-btn);
+        border: none; 
+        border-bottom: 1px solid var(--color-code-border);
+        border-left: 1px solid var(--color-code-border);
+        border-radius: 0 8px 0 4px; /* Rounded top-right corner */
+        padding: 8px 15px;
+        cursor: pointer;
+        font-size: 0.85em;
+        z-index: 10;
+        transition: color 0.2s, background-color 0.2s;
+        user-select: none;
+    }
+    .copy-button:hover {
+        color: var(--color-copy-btn-hover);
+        background-color: var(--color-code-border);
+    }
+    .copy-button.copied {
+        background-color: #4CAF50; 
+        color: white;
+        border-color: #4CAF50;
+    }
+    
+    /* TYPING INDICATOR STYLING */
+    .loading-row .msg-content {
+        background-color: #e6e6fa;
+        color: #555;
+        font-style: italic;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        animation: pulse 1.5s infinite;
+    }
+    .dark-mode .loading-row .msg-content {
+         background-color: #444;
+         color: #ccc;
+    }
+    @keyframes pulse {
+        0% { opacity: 0.7; }
+        50% { opacity: 1.0; }
+        100% { opacity: 0.7; }
+    }
+</style>
 </head>
-<body class="light-mode">
+
+<body>
     <div id="main-container">
-        <div id="chat-header">
-            <h1>Custom Gemini Assistant (Test)</h1>
-            <span class="theme-toggle" id="theme-toggle" title="Toggle Theme">☀️</span>
-        </div>
+        <header id="chat-header">
+            <span>Gemini Chatbot</span>
+            <span id="theme-toggle" class="material-symbols-rounded theme-toggle">
+                light_mode
+            </span>
+        </header>
+
         <div id="chat-window">
             <div class="msg-row bot-row">
                 <div class="avatar bot-avatar">AI</div>
-                <div class="msg-content">Hello! I am Test, your comprehensive AI assistant. How can I help you today?</div>
+                <div class="msg-content">
+                    <p>Hello! I'm Test, an AI assistant powered by Gemini. Ask me anything about coding, deployment, or general knowledge!</p>
+                </div>
             </div>
-        </div>
+            </div>
+
         <div id="chat-input-area">
-            <input type="text" id="user-input" placeholder="Ask me anything..." onkeydown="if (event.key === 'Enter') sendMessage()">
-            <button id="send-button" onclick="sendMessage()">Send</button>
+            <input type="text" id="user-input" placeholder="Ask me anything..." autocomplete="off">
+            <button id="send-button">Send</button>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/14.1.0/markdown-it.min.js" integrity="sha512-42fG/wE9c72sQ/X4zN8uP+yQv9j/s2R1G2zT0d9n/7z+s7V5rM1+p3K5lFv3t8Kx8WJ/v8v1t8qXw/v8Q/v8v1t8qXw/v8Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
-        // --- THEME TOGGLE LOGIC ---
-        const body = document.body;
-        const toggleButton = document.getElementById('theme-toggle');
-        
-        function applyTheme(isDark) {
-            if (isDark) {
-                body.classList.add('dark-mode');
-                toggleButton.textContent = '🌙'; 
-                localStorage.setItem('theme', 'dark');
-            } else {
-                body.classList.remove('dark-mode');
-                toggleButton.textContent = '☀️'; 
-                localStorage.setItem('theme', 'light');
-            }
+        // DOM Elements
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // State Variables
+        const md = new markdownit();
+        let isWaitingForResponse = false;
+
+        // Conversation History (stores raw text for context)
+        let conversationHistory = [];
+
+        // --- Core Functions ---
+
+        /**
+         * Adds a message to the chat window and scrolls to the bottom.
+         * @param {string} sender - 'user' or 'bot'
+         * @param {string} content - HTML content of the message.
+         * @returns {HTMLElement} The message row element.
+         */
+        function addMessage(sender, content) {
+            const row = document.createElement('div');
+            row.className = `msg-row ${sender}-row`;
+            row.innerHTML = `
+                <div class="avatar ${sender}-avatar">${sender === 'user' ? 'You' : 'AI'}</div>
+                <div class="msg-content">${content}</div>
+            `;
+            chatWindow.appendChild(row);
+            // Scroll to bottom
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return row;
         }
 
-        // Load theme from localStorage on startup
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            applyTheme(true);
-        } else {
-            applyTheme(false);
-        }
-
-        // Toggle handler
-        toggleButton.addEventListener('click', () => {
-            const isDark = body.classList.contains('dark-mode');
-            applyTheme(!isDark);
-        });
-        
-        // --- CHAT LOGIC & COPY BUTTON ---
-        const API_URL = '/chat'; 
-        
-        // Function to create and attach the copy button to a code block
-        function addCopyButton(codeBlockElement) {
-            const container = document.createElement('div');
-            container.classList.add('code-container');
-            
-            // Move the <pre> block inside the new container
-            codeBlockElement.parentNode.insertBefore(container, codeBlockElement);
-            container.appendChild(codeBlockElement);
-
-            const copyButton = document.createElement('button');
-            copyButton.textContent = 'Copy';
-            copyButton.classList.add('copy-button');
-            container.appendChild(copyButton);
-
-            copyButton.addEventListener('click', () => {
-                // Get the raw text content of the <pre> block (excluding the button)
-                const textToCopy = codeBlockElement.textContent;
-                
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    copyButton.textContent = 'Copied!';
-                    copyButton.classList.add('copied');
-                    setTimeout(() => {
-                        copyButton.textContent = 'Copy';
-                        copyButton.classList.remove('copied');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy text: ', err);
-                    copyButton.textContent = 'Error!';
-                });
-            });
-        }
-
+        /**
+         * Sends user message and requests a response from the Flask backend.
+         */
         async function sendMessage() {
-            const input = document.getElementById('user-input');
-            const button = document.getElementById('send-button');
-            const messagesBox = document.getElementById('chat-window');
-            const userMessage = input.value.trim();
+            const message = userInput.value.trim();
+            if (message === '' || isWaitingForResponse) return;
 
-            if (!userMessage) return;
+            // 1. Update State and UI
+            isWaitingForResponse = true;
+            sendButton.disabled = true;
+            sendButton.textContent = 'Wait...';
 
-            // 1. Display user message
-            messagesBox.innerHTML += `
-                <div class="msg-row user-row">
-                    <div class="avatar user-avatar">U</div>
-                    <div class="msg-content">${userMessage}</div>
-                </div>
-            `;
-            input.value = '';
-            messagesBox.scrollTop = messagesBox.scrollHeight;
+            // 2. Add User Message and Context
+            const userHtmlContent = `<p>${message}</p>`;
+            addMessage('user', userHtmlContent);
+            
+            // Add user message to history
+            conversationHistory.push(message);
+            // Combine history for context (backend uses this entire string)
+            const fullContext = conversationHistory.join('\n\n---CONTEXT BREAK---\n\n');
 
-            // 2. Add loading state and disable input
-            const loadingMsgId = 'loading-' + Date.now();
-            messagesBox.innerHTML += `
-                <div class="msg-row bot-row loading-row" id="${loadingMsgId}">
-                    <div class="avatar bot-avatar">AI</div>
-                    <div class="msg-content">Test is thinking...</div>
-                </div>
-            `;
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-            input.disabled = true;
-            button.disabled = true;
+            userInput.value = '';
+
+            // 3. Add Loading Indicator
+            const loadingRow = addMessage('bot', 'AI is thinking...');
+            loadingRow.classList.add('loading-row');
 
             try {
-                // 3. Send message to the local server
-                const response = await fetch(API_URL, {
+                // 4. Send Request to Backend
+                const response = await fetch('/chat', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ message: userMessage })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: fullContext })
                 });
 
+                // 5. Process Response
                 const data = await response.json();
-                
-                // 4. Format the response and replace markdown code blocks
-                let formattedResponse = data.response;
-                const codeBlockRegex = /```(?:\w*\n)?([\s\S]*?)```/gs; 
-                
-                // Replace markdown code blocks with <pre> tags
-                formattedResponse = formattedResponse.replace(codeBlockRegex, (match, codeContent) => {
-                    const escapedCode = codeContent
-                        .replace(/&/g, "&amp;")
-                        .replace(/</g, "&lt;")
-                        .replace(/>/g, "&gt;");
-                    
-                    // Note: We return <pre> here, the JS will attach the button later
-                    return `<pre>${escapedCode}</pre>`;
-                });
-                
-                // 5. Remove loading state
-                const loadingElement = document.getElementById(loadingMsgId);
-                if (loadingElement) loadingElement.remove();
+                let botResponse = data.response;
 
-                // 6. Display final bot response
-                messagesBox.innerHTML += `
-                    <div class="msg-row bot-row" id="msg-${loadingMsgId}">
-                        <div class="avatar bot-avatar">AI</div>
-                        <div class="msg-content">${formattedResponse}</div>
-                    </div>
-                `;
-                
-                // 7. Post-processing: Find new code blocks and add the copy button
-                const newBotMsg = document.getElementById(`msg-${loadingMsgId}`);
-                if (newBotMsg) {
-                    newBotMsg.querySelectorAll('.msg-content pre').forEach(addCopyButton);
+                // Remove loading indicator
+                loadingRow.remove();
+
+                if (response.ok) {
+                    // Render Markdown content to HTML
+                    const renderedContent = renderMarkdown(botResponse);
+                    const botRow = addMessage('bot', renderedContent);
+                    
+                    // Add functionality to copy buttons in the new message
+                    attachCopyListeners(botRow);
+
+                    // Add the bot response to history (for next context)
+                    conversationHistory.push(botResponse);
+
+                } else {
+                    // Handle server errors
+                    const errorContent = `<p>Error: ${botResponse}</p>`;
+                    addMessage('bot', errorContent);
                 }
 
             } catch (error) {
-                // 8. Error handling
-                const loadingElement = document.getElementById(loadingMsgId);
-                if (loadingElement) loadingElement.remove();
-                
-                messagesBox.innerHTML += `
-                    <div class="msg-row bot-row">
-                        <div class="avatar bot-avatar">AI</div>
-                        <div class="msg-content" style="background-color: #ffeaea; color: #cc0000; border: 1px solid #cc0000;">
-                            Connection Error: Could not reach the server. Ensure app.py is running.
-                        </div>
-                    </div>
-                `;
                 console.error('Fetch error:', error);
+                loadingRow.remove();
+                addMessage('bot', `<p>Connection Error: Could not reach the server.</p>`);
             } finally {
-                // 9. Re-enable input and scroll
-                input.disabled = false;
-                button.disabled = false;
-                input.focus();
-                messagesBox.scrollTop = messagesBox.scrollHeight;
+                // 6. Reset State and UI
+                isWaitingForResponse = false;
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send';
+                chatWindow.scrollTop = chatWindow.scrollHeight;
             }
         }
+
+        // --- UI Enhancements and Helpers ---
+
+        /**
+         * Renders Markdown content and wraps code blocks for copying.
+         */
+        function renderMarkdown(markdownText) {
+            // 1. Render Markdown to HTML
+            let htmlContent = md.render(markdownText);
+            
+            // 2. Wrap all <pre> tags (code blocks) with a container and copy button
+            // This is necessary because markdown-it renders code blocks as: <pre><code>...</code></pre>
+            
+            // Use a regex to find all code blocks and wrap them
+            htmlContent = htmlContent.replace(
+                /<pre><code([^>]*)>([\s\S]*?)<\/code><\/pre>/gi,
+                (match, langAttr, codeContent) => {
+                    // Extract language if present (e.g., class="language-python")
+                    const langMatch = langAttr.match(/class="language-(\w+)"/);
+                    const language = langMatch ? langMatch[1].toUpperCase() : 'Code';
+                    
+                    // Re-escape HTML entities for display in the pre tag
+                    const escapedCodeContent = codeContent
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"');
+
+                    return `
+                        <div class="code-container">
+                            <button class="copy-button" data-code="${escapedCodeContent}">${language} &nbsp; Copy</button>
+                            <pre><code${langAttr}>${codeContent}</code></pre>
+                        </div>
+                    `;
+                }
+            );
+
+            return htmlContent;
+        }
+
+        /**
+         * Attaches click listeners to all 'Copy' buttons within a message row.
+         */
+        function attachCopyListeners(element) {
+            const copyButtons = element.querySelectorAll('.copy-button');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    // The raw code is stored in a data attribute
+                    const codeToCopy = e.target.getAttribute('data-code');
+                    
+                    navigator.clipboard.writeText(codeToCopy)
+                        .then(() => {
+                            // Temporary feedback
+                            e.target.textContent = 'Copied!';
+                            e.target.classList.add('copied');
+                            setTimeout(() => {
+                                // Restore original button text
+                                const language = e.target.textContent.split(' ')[0];
+                                e.target.textContent = `${language}   Copy`;
+                                e.target.classList.remove('copied');
+                            }, 1500);
+                        })
+                        .catch(err => {
+                            console.error('Could not copy text: ', err);
+                            e.target.textContent = 'Error!';
+                        });
+                });
+            });
+        }
+        
+        // --- Event Listeners ---
+
+        // Send message on button click
+        sendButton.addEventListener('click', sendMessage);
+
+        // Send message on Enter key press
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault(); // Prevent new line in input box
+                sendMessage();
+            }
+        });
+
+        // Theme Toggle Logic
+        themeToggle.addEventListener('click', () => {
+            const isDarkMode = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+            themeToggle.textContent = isDarkMode ? 'dark_mode' : 'light_mode';
+        });
+
+        // Load theme preference on initial load
+        (function loadTheme() {
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = 'dark_mode';
+            } else {
+                themeToggle.textContent = 'light_mode';
+            }
+        })();
+
+        // Initial check for all existing code blocks (just in case)
+        // This is mainly for debugging/initial message if it had code blocks.
+        window.addEventListener('load', () => {
+             attachCopyListeners(chatWindow);
+        });
+
     </script>
 </body>
 </html>
